@@ -14,7 +14,7 @@ resource "aws_cognito_user_pool" "main" {
   email_configuration {
     email_sending_account = "DEVELOPER"
     from_email_address    = "CreeperKeeper <no-reply@creeperkeeper.com>"
-    source_arn            = data.aws_ses_domain_identity.identity.arn
+    source_arn            = aws_ses_domain_identity.identity.arn
   }
 }
 
@@ -56,6 +56,9 @@ resource "aws_route53_record" "cognito_auth" {
   }
 }
 
-data "aws_ses_domain_identity" "identity" {
+//data "aws_ses_domain_identity" "identity" {
+//  domain = local.domain_name
+//}
+resource "aws_ses_domain_identity" "identity" {
   domain = local.domain_name
 }

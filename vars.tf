@@ -5,4 +5,5 @@ locals {
   auth_domain_name = "auth.${local.domain_name}"
   
   app_name = "creeper-keeper"
+  app_resource_name = "creeper_keeper"
 }

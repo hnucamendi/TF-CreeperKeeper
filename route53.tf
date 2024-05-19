@@ -89,3 +89,26 @@ resource "aws_acm_certificate_validation" "cdn_validation" {
   validation_record_fqdns = [for record in aws_route53_record.cdn_validation_record : record.fqdn]
 }
 
+resource "aws_route53_record" "records" {
+  for_each = {
+    for dvo in aws_acm_certificate.cert.domain_validation_options : dvo.domain_name => {
+      name   = dvo.domain_name
+      alias  = {
+        name = aws_cloudfront_distribution.s3_distribution.domain_name
+        zone_id = aws_cloudfront_distribution.s3_distribution.hosted_zone_id
+      }
+    }
+  }
+
+  allow_overwrite = true
+  name            = each.value.name
+  type            = "A"
+  zone_id         = data.aws_route53_zone.zone.zone_id
+
+  alias {
+    name                   = each.value.alias.name
+    zone_id                = each.value.alias.zone_id
+    evaluate_target_health = false
+  }
+}
+
