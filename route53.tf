@@ -49,7 +49,7 @@ resource "aws_route53_record" "validation_record" {
 
 resource "aws_route53_record" "cdn_validation_record" {
   for_each = {
-    for dvo in aws_acm_certificate.cert.domain_validation_options : dvo.domain_name => {
+    for dvo in aws_acm_certificate.cdn_cert.domain_validation_options : dvo.domain_name => {
       name   = dvo.resource_record_name
       record = dvo.resource_record_value
       type   = dvo.resource_record_type
@@ -65,7 +65,7 @@ resource "aws_route53_record" "cdn_validation_record" {
 
 resource "aws_route53_record" "auth_validation_record" {
   for_each = {
-    for dvo in aws_acm_certificate.cert.domain_validation_options : dvo.domain_name => {
+    for dvo in aws_acm_certificate.auth_cert.domain_validation_options : dvo.domain_name => {
       name   = dvo.resource_record_name
       record = dvo.resource_record_value
       type   = dvo.resource_record_type
