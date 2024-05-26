@@ -59,4 +59,4 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     acm_certificate_arn            = aws_acm_certificate_validation.validation.certificate_arn
     ssl_support_method             = "sni-only"
   }
-}kkkk
+}
