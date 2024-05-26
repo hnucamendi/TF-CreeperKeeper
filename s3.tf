@@ -2,6 +2,18 @@ resource "aws_s3_bucket" "creeper_keeper" {
   bucket = local.domain_name
 }
 
+resource "aws_s3_bucket_website_configuration" "creeper_keeper" {
+  bucket = aws_s3_bucket.creeper_keeper.id
+
+  index_document {
+    suffix = "index.html"
+  }
+
+  error_document {
+    key = "error.html"
+  }
+}
+
 resource "aws_s3_bucket_public_access_block" "creeper_keeper_access_block" {
   bucket = aws_s3_bucket.creeper_keeper.id
 

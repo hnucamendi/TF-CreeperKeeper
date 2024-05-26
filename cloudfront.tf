@@ -5,7 +5,7 @@ resource "aws_s3_bucket_acl" "creeper_keeper_acl" {
 
 resource "aws_cloudfront_distribution" "s3_distribution" {
   origin {
-    domain_name = local.domain_name
+    domain_name = "${local.domain_name}.s3-website-us-east-1.amazonaws.com"
     origin_id   = local.app_name
 
     custom_origin_config {
@@ -59,4 +59,4 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     acm_certificate_arn            = aws_acm_certificate_validation.validation.certificate_arn
     ssl_support_method             = "sni-only"
   }
-}
+}kkkk
