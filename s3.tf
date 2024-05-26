@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "creeper_keeper" {
-  bucket = "${local.domain_name}"
+  bucket = local.domain_name
 }
 
 resource "aws_s3_bucket_public_access_block" "creeper_keeper_access_block" {

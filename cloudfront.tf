@@ -5,7 +5,7 @@ resource "aws_s3_bucket_acl" "creeper_keeper_acl" {
 
 resource "aws_cloudfront_distribution" "s3_distribution" {
   origin {
-    domain_name = "${local.domain_name}"
+    domain_name = local.domain_name
     origin_id   = local.app_name
 
     custom_origin_config {
@@ -15,14 +15,14 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
       origin_ssl_protocols   = ["TLSv1", "TLSv1.1", "TLSv1.2"]
     }
   }
-  enabled = true
-  is_ipv6_enabled = true
-  comment = "creeperkeeper.com cloudfront distro"
+  enabled             = true
+  is_ipv6_enabled     = true
+  comment             = "creeperkeeper.com cloudfront distro"
   default_root_object = "index.html"
 
   custom_error_response {
-    error_code = 404
-    response_code = 200
+    error_code         = 404
+    response_code      = 200
     response_page_path = "/index.html"
 }
   aliases = [local.domain_name, "www.${local.domain_name}"]
