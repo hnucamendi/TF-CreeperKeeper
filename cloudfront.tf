@@ -11,7 +11,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     custom_origin_config {
       http_port = "80"
       https_port = "443"
-      origin_protocol_policy = "https-only"
+      origin_protocol_policy = "http-only"
       origin_ssl_protocols   = ["TLSv1", "TLSv1.1", "TLSv1.2"]
     }
   }
@@ -30,7 +30,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     default_cache_behavior {
     allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "creeper-keeper"
+    target_origin_id = local.app_name
 
     forwarded_values {
       query_string = true
