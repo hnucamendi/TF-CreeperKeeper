@@ -21,8 +21,6 @@ resource "aws_cognito_user_pool" "main" {
 resource "aws_cognito_user_pool_client" "client" {
   name                                 = "${local.app_name}-user-pool-client"
   user_pool_id                         = aws_cognito_user_pool.main.id
-  allowed_oauth_flows                  = ["code", "implicit"]
-  allowed_oauth_scopes                 = ["email", "openid"]
   callback_urls                        = ["https://creeperkeeper.com/home/", "http://localhost:5173/home/"]
   logout_urls                          = ["https://creeperkeeper.com/", "http://localhost:5173/"]
   allowed_oauth_flows_user_pool_client = true
