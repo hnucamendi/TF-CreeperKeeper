@@ -23,6 +23,7 @@ resource "aws_cognito_user_pool_client" "client" {
   user_pool_id                         = aws_cognito_user_pool.main.id
   callback_urls                        = ["https://creeperkeeper.com/home/", "http://localhost:5173/home/"]
   logout_urls                          = ["https://creeperkeeper.com/", "http://localhost:5173/"]
+  explicit_auth_flows                  = ["ALLOW_USER_PASSWORD_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"]
   allowed_oauth_flows_user_pool_client = true
   generate_secret                      = false
   refresh_token_validity               = 1
