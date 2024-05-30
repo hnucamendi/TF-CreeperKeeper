@@ -4,24 +4,27 @@ resource "aws_apigatewayv2_api" "creeper_keeper" {
 }
 
 resource "aws_apigatewayv2_route" "ck_create_route" {
-  api_id        = aws_apigatewayv2_api.creeper_keeper.id
-  route_key     = "POST /ck"
-  target        = "integrations/${aws_apigatewayv2_integration.ck_api_create_server.id}"
-  authorizer_id = aws_apigatewayv2_authorizer.creeper_keeper_authorizer.id
+  api_id          = aws_apigatewayv2_api.creeper_keeper.id
+  route_key       = "POST /ck"
+  target          = "integrations/${aws_apigatewayv2_integration.ck_api_create_server.id}"
+  authorizer_id   = aws_apigatewayv2_authorizer.creeper_keeper_authorizer.id
+  authorization_type = "CUSTOM"
 }
 
 resource "aws_apigatewayv2_route" "ck_get_route" {
-  api_id        = aws_apigatewayv2_api.creeper_keeper.id
-  route_key     = "GET /ck"
-  target        = "integrations/${aws_apigatewayv2_integration.ck_api_get_server.id}"
-  authorizer_id = aws_apigatewayv2_authorizer.creeper_keeper_authorizer.id
+  api_id          = aws_apigatewayv2_api.creeper_keeper.id
+  route_key       = "GET /ck"
+  target          = "integrations/${aws_apigatewayv2_integration.ck_api_get_server.id}"
+  authorizer_id   = aws_apigatewayv2_authorizer.creeper_keeper_authorizer.id
+  authorization_type = "CUSTOM"
 }
 
 resource "aws_apigatewayv2_route" "ck_update_route" {
-  api_id        = aws_apigatewayv2_api.creeper_keeper.id
-  route_key     = "PUT /ck"
-  target        = "integrations/${aws_apigatewayv2_integration.ck_api_update_server.id}"
-  authorizer_id = aws_apigatewayv2_authorizer.creeper_keeper_authorizer.id
+  api_id          = aws_apigatewayv2_api.creeper_keeper.id
+  route_key       = "PUT /ck"
+  target          = "integrations/${aws_apigatewayv2_integration.ck_api_update_server.id}"
+  authorizer_id   = aws_apigatewayv2_authorizer.creeper_keeper_authorizer.id
+  authorization_type = "CUSTOM"
 }
 
 resource "aws_apigatewayv2_stage" "creeper_keeper_stage"{
@@ -54,15 +57,18 @@ resource "aws_apigatewayv2_deployment" "creeper_keeper_deployment" {
       jsonencode(aws_apigatewayv2_integration.ck_api_create_server),
       jsonencode(aws_apigatewayv2_integration.ck_api_get_server),
       jsonencode(aws_apigatewayv2_integration.ck_api_update_server),
-      jsonencode(aws_apigatewayv2_route.ck_create_route),
-      jsonencode(aws_apigatewayv2_route.ck_get_route),
-      jsonencode(aws_apigatewayv2_route.ck_update_route),
     ])))
   }
 
   lifecycle {
     create_before_destroy = true
   }
+
+  depends_on = [
+    aws_apigatewayv2_route.ck_create_route,
+    aws_apigatewayv2_route.ck_get_route,
+    aws_apigatewayv2_route.ck_update_route,
+  ]
 }
 
 resource "aws_apigatewayv2_authorizer" "creeper_keeper_authorizer" {
