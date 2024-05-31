@@ -1,11 +1,17 @@
 resource "aws_apigatewayv2_api" "creeper_keeper" {
   name          = local.app_name
   protocol_type = "HTTP"
+
+  cors_configuration {
+    allow_origins = ["http://localhost:5173/*", "https://creeperkeeper.com/*", "https://www.creeperkeeper.com/*"]
+    allow_headers = ["Authorization"]
+    allow_methods = ["GET", "POST", "PUT"]
+  }
 }
 
 resource "aws_apigatewayv2_route" "ck_create_route" {
   api_id          = aws_apigatewayv2_api.creeper_keeper.id
-  route_key       = "POST /ck"
+  route_key       = "POST /server-config"
   target          = "integrations/${aws_apigatewayv2_integration.ck_api_create_server.id}"
   authorizer_id   = aws_apigatewayv2_authorizer.creeper_keeper_authorizer.id
   authorization_type = "CUSTOM"
@@ -13,7 +19,7 @@ resource "aws_apigatewayv2_route" "ck_create_route" {
 
 resource "aws_apigatewayv2_route" "ck_get_route" {
   api_id          = aws_apigatewayv2_api.creeper_keeper.id
-  route_key       = "GET /ck"
+  route_key       = "GET /server-config"
   target          = "integrations/${aws_apigatewayv2_integration.ck_api_get_server.id}"
   authorizer_id   = aws_apigatewayv2_authorizer.creeper_keeper_authorizer.id
   authorization_type = "CUSTOM"
@@ -21,7 +27,7 @@ resource "aws_apigatewayv2_route" "ck_get_route" {
 
 resource "aws_apigatewayv2_route" "ck_update_route" {
   api_id          = aws_apigatewayv2_api.creeper_keeper.id
-  route_key       = "PUT /ck"
+  route_key       = "PUT /server-config"
   target          = "integrations/${aws_apigatewayv2_integration.ck_api_update_server.id}"
   authorizer_id   = aws_apigatewayv2_authorizer.creeper_keeper_authorizer.id
   authorization_type = "CUSTOM"
