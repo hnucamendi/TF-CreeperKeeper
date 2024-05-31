@@ -45,7 +45,25 @@ data "aws_iam_policy_document" "creeper_keeper_lambda_policy_document" {
   }
 }
 
+data "aws_iam_policy_document" "cloudwatch_logs_policy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+    resources = ["arn:aws:logs:*:*:*"]
+  }
+}
+
 resource "aws_iam_role" "creeper_keeper_role" {
   name               = "creeper-keeper-role"
   assume_role_policy = data.aws_iam_policy_document.creeper_keeper_lambda_policy_document.json
+}
+
+resource "aws_iam_role_policy" "creeper_keeper_role_policy" {
+  name   = "creeper-keeper-role-policy"
+  role   = aws_iam_role.creeper_keeper_role.id
+  policy = data.aws_iam_policy_document.cloudwatch_logs_policy.json
 }

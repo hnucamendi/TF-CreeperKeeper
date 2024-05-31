@@ -30,6 +30,27 @@ resource "aws_apigatewayv2_route" "ck_update_route" {
 resource "aws_apigatewayv2_stage" "creeper_keeper_stage"{
   api_id = aws_apigatewayv2_api.creeper_keeper.id
   name   = "${local.app_name}-stage"
+
+  access_log_settings {
+    destination_arn = aws_cloudwatch_log_group.apigateway_access_log_group.arn
+    format = jsonencode({
+      requestId: "$context.requestId",
+      ip: "$context.identity.sourceIp",
+      caller: "$context.identity.caller",
+      user: "$context.identity.user",
+      requestTime: "$context.requestTime",
+      httpMethod: "$context.httpMethod",
+      resourcePath: "$context.resourcePath",
+      status: "$context.status",
+      protocol: "$context.protocol",
+      responseLength: "$context.responseLength"
+    })
+  }
+
+  default_route_settings {
+    logging_level = "INFO"
+    data_trace_enabled = true
+  }
 }
 
 resource "aws_apigatewayv2_domain_name" "creeper_keeper_domain" {
