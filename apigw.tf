@@ -60,7 +60,7 @@ resource "aws_apigatewayv2_stage" "creeper_keeper_stage"{
 }
 
 resource "aws_apigatewayv2_domain_name" "creeper_keeper_domain" {
-  domain_name = "ckapi.${local.domain_name}"
+  domain_name = local.api_domain_name
   
   domain_name_configuration {
     certificate_arn = aws_acm_certificate.api_cert.arn
@@ -103,7 +103,7 @@ resource "aws_apigatewayv2_authorizer" "creeper_keeper_authorizer" {
   authorizer_type                   = "REQUEST"
   authorizer_uri                    = aws_lambda_function.ck_authorizer.invoke_arn
   identity_sources                  = ["$request.header.Authorization"]
-  name                              = "ckapi-authorizer"
+  name                              = "api-authorizer"
   authorizer_payload_format_version = "2.0"
   depends_on                        = [aws_lambda_function.ck_authorizer]
 }
