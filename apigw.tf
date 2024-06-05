@@ -49,13 +49,19 @@ resource "aws_apigatewayv2_stage" "creeper_keeper_stage"{
       resourcePath: "$context.resourcePath",
       status: "$context.status",
       protocol: "$context.protocol",
-      responseLength: "$context.responseLength"
+      responseLength: "$context.responseLength",
+      requestTimeEpoch: "$context.requestTimeEpoch",
+      integrationErrorMessage: "$context.integrationErrorMessage",
+      integrationLatency: "$context.integrationLatency",
+      integrationStatus: "$context.integrationStatus",
+      errorMessage: "$context.error.message"
     })
   }
 
   default_route_settings {
-    logging_level = "INFO"
-    data_trace_enabled = true
+    logging_level            = "INFO"
+    data_trace_enabled       = true
+    detailed_metrics_enabled = true
   }
 }
 

@@ -17,6 +17,7 @@ resource "aws_cloudwatch_log_group" "ck_authorizer_log_group" {
   name  = "/aws/lambda/ck-authorizer"
   retention_in_days = 7
 }
+
 resource "aws_cloudwatch_log_group" "apigateway_access_log_group" {
   name              = "/aws/apigateway/${aws_apigatewayv2_api.creeper_keeper.name}-access-logs"
   retention_in_days = 7
