@@ -30,7 +30,7 @@ resource "aws_apigatewayv2_authorizer" "ec2_state_manager_authorizer" {
 resource "aws_apigatewayv2_route" "ec2_state_manager_route" {
   api_id          = aws_apigatewayv2_api.ec2_state_manager.id
   route_key       = "POST /ec2"
-  target          = "integrations/${aws_apigatewayv2_integration.ec2_state_manager_integration.id}"
+  target          = "integrations/${aws_apigatewayv2_integration.ec2_state_manager.id}"
   authorization_scopes = ["read:all", "write:all"]
   authorizer_id   = aws_apigatewayv2_authorizer.ec2_state_manager_authorizer.id
   authorization_type = "JWT"
@@ -68,12 +68,6 @@ resource "aws_apigatewayv2_stage" "ec2_state_manager_stage"{
   }
 }
 
-resource "aws_apigatewayv2_api_mapping" "main_api_mapping" {
-  api_id      = aws_apigatewayv2_api.ec2_state_manager.id
-  domain_name = aws_apigatewayv2_domain_name.statemanager_api_domain.id
-  stage       = aws_apigatewayv2_stage.ec2_state_manager_stage.id
-}
-
 resource "aws_apigatewayv2_deployment" "ec2_state_manager_deployment" {
   api_id      = aws_apigatewayv2_api.ec2_state_manager.id
   description = "Main Deployment"
@@ -83,7 +77,7 @@ resource "aws_apigatewayv2_deployment" "ec2_state_manager_deployment" {
   }
 }
 
-resource "aws_apigatewayv2_integration" "ec2_state_manager_integration" {
+resource "aws_apigatewayv2_integration" "ec2_state_manager" {
   api_id                    = aws_apigatewayv2_api.ec2_state_manager.id
   integration_type          = "AWS_PROXY"
   description               = "EC2 State Manager Lambda Integration"
