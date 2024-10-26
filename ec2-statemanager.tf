@@ -69,8 +69,8 @@ resource "aws_apigatewayv2_stage" "ec2_state_manager_stage"{
 
 resource "aws_apigatewayv2_api_mapping" "main_api_mapping" {
   api_id      = aws_apigatewayv2_api.ec2_state_manager.id
-  domain_name = aws_apigatewayv2_domain_name.statemanager_api_domain.id
-  stage       = aws_apigatewayv2_stage.ec2_state_manager_stage.id
+  domain_name = aws_apigatewayv2_domain_name.statemanager_api_domain.domain_name
+  stage       = aws_apigatewayv2_stage.ec2_state_manager_stage.name
 }
 
 resource "aws_apigatewayv2_deployment" "ec2_state_manager_deployment" {
