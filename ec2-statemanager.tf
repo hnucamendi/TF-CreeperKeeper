@@ -38,8 +38,9 @@ resource "aws_apigatewayv2_route" "ec2_state_manager_route" {
 
 resource "aws_apigatewayv2_stage" "ec2_state_manager_stage"{
   api_id      = aws_apigatewayv2_api.ec2_state_manager.id
-  name        = "${local.ec2_app_name}-stage"  
+  name        = "${local.ec2_app_name}-stage"
   auto_deploy = true
+
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.apigw_main.arn
     format = jsonencode({
@@ -69,8 +70,8 @@ resource "aws_apigatewayv2_stage" "ec2_state_manager_stage"{
 
 resource "aws_apigatewayv2_api_mapping" "main_api_mapping" {
   api_id      = aws_apigatewayv2_api.ec2_state_manager.id
-  domain_name = aws_apigatewayv2_domain_name.statemanager_api_domain.domain_name
-  stage       = aws_apigatewayv2_stage.ec2_state_manager_stage.name
+  domain_name = aws_apigatewayv2_domain_name.statemanager_api_domain.id
+  stage       = aws_apigatewayv2_stage.ec2_state_manager_stage.id
 }
 
 resource "aws_apigatewayv2_deployment" "ec2_state_manager_deployment" {
@@ -152,7 +153,7 @@ resource "aws_iam_role_policy" "main_role_policy" {
 
 # Lambda Permissions for API Gateway
 resource "aws_lambda_permission" "api_gateway_get_projects" {
-  statement_id  = "AllowAPIGatewayInvokeProjects"
+  statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.ec2_state_manager.arn
   principal     = "apigateway.amazonaws.com"
