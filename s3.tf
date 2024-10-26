@@ -1,7 +1,7 @@
-# resource "aws_s3_bucket" "creeper_keeper" {
-#   bucket = local.domain_name
-# }
-# 
+resource "aws_s3_bucket" "creeper_keeper" {
+  bucket = local.app_name
+}
+
 # resource "aws_s3_bucket_website_configuration" "creeper_keeper" {
 #   bucket = aws_s3_bucket.creeper_keeper.id
 # 
@@ -22,30 +22,30 @@
 #   ignore_public_acls      = false
 #   restrict_public_buckets = false
 # }
-# 
+
 # resource "aws_s3_bucket_ownership_controls" "creeper_keeper" {
 #   bucket = aws_s3_bucket.creeper_keeper.id
 #   rule {
 #     object_ownership = "BucketOwnerPreferred"
 #   }
 # }
-# 
+
 # resource "aws_s3_bucket_policy" "creeper_keeper_policy" {
 #   bucket = aws_s3_bucket.creeper_keeper.id
 #   policy = data.aws_iam_policy_document.creeper_keeper_policy_document.json
 # }
-# 
+
 # data "aws_iam_policy_document" "creeper_keeper_policy_document" {
 #   statement {
 #     sid       = ""
 #     effect    = "Allow"
 #     resources = ["${aws_s3_bucket.creeper_keeper.arn}/*"]
-# 
+
 #     principals {
 #       type        = "*"
 #       identifiers = ["*"]
 #     }
-# 
+
 #     actions = [
 #       "s3:GetObject",
 #     ]
