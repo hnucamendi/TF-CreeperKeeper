@@ -1,6 +1,29 @@
 # This Terraform script will create an EC2 instance to host a Minecraft server on AWS.
 # Make sure to replace the placeholder values with your own information.
 
+resource "aws_iam_role" "minecraft_instance_role" {
+  name = "minecraft-instance-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        },
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ssm_policy_attachment" {
+  role       = aws_iam_role.minecraft_instance_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+
 resource "aws_key_pair" "minecraft_key" {
   key_name   = "minecraft-server-key"  # Name for your key pair
   public_key = file("~/.ssh/id_ed25519.pub")  # Path to your SSH public key
@@ -26,6 +49,10 @@ resource "aws_instance" "minecraft_server" {
               sudo yum install -y java-22-amazon-corretto-devel
               sudo yum install -y tmux unzip
 
+              sudo yum install -y amazon-ssm-agent
+              sudo systemctl enable amazon-ssm-agent
+              sudo systemctl start amazon-ssm-agent
+
               cd home/ec2-user
               mkdir Minecraft
               cd Minecraft/
@@ -35,6 +62,11 @@ resource "aws_instance" "minecraft_server" {
               echo -e ".\yes" | ./serverinstall_126_12530
               tmux new -d -s minecraft "echo -e 'yes' | ./start.sh"
               EOF
+}
+
+resource "aws_iam_instance_profile" "minecraft_instance_profile" {
+  name = "minecraft-instance-profile"
+  role = aws_iam_role.minecraft_instance_role.name
 }
 
 resource "aws_security_group" "minecraft_sg" {
