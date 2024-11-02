@@ -1,6 +1,15 @@
+locals {
+  statemanager_api_subdomain = "statemanager"
+  statemanager_api_domain_name = "${local.statemanager_api_subdomain}.${local.ck_domain_name}"
+
+  statemanager_ec2_app_name = "ec2-statemanager"
+  statemanager_jwt_audience = ["ec2-instance-manager-api-resource"]
+  statemanager_jwt_issuer = "https://${var.environment}-bxn245l6be2yzhil.us.auth0.com/"
+}
+
 # Lambda Function
 resource "aws_lambda_function" "ec2_state_manager" {
-  function_name = local.ec2_app_name
+  function_name = local.statemanager_ec2_app_name
   role          = aws_iam_role.main_role.arn
   architectures = ["x86_64"]
   filename      = "./bootstrap.zip"
@@ -11,19 +20,19 @@ resource "aws_lambda_function" "ec2_state_manager" {
 
 # API Gateway
 resource "aws_apigatewayv2_api" "ec2_state_manager" {
-  name          = local.ec2_app_name
+  name          = local.statemanager_ec2_app_name
   protocol_type = "HTTP"
 }
 
 resource "aws_apigatewayv2_authorizer" "ec2_state_manager_authorizer" {
   api_id                            = aws_apigatewayv2_api.ec2_state_manager.id
-  name                              = "${local.ec2_app_name}-api-authorizer"
+  name                              = "${local.statemanager_ec2_app_name}-api-authorizer"
   authorizer_type                   = "JWT"
   identity_sources                  = ["$request.header.Authorization"]
 
   jwt_configuration {
-    audience = local.jwt_audience
-    issuer   = local.jwt_issuer 
+    audience = local.statemanager_jwt_audience
+    issuer   = local.statemanager_jwt_issuer 
   }
 }
 
@@ -38,7 +47,7 @@ resource "aws_apigatewayv2_route" "ec2_state_manager_route" {
 
 resource "aws_apigatewayv2_stage" "ec2_state_manager_stage"{
   api_id      = aws_apigatewayv2_api.ec2_state_manager.id
-  name        = "${local.ec2_app_name}-stage"
+  name        = "${local.statemanager_ec2_app_name}-stage"
   auto_deploy = true
 
   access_log_settings {
@@ -95,7 +104,7 @@ resource "aws_apigatewayv2_integration" "ec2_state_manager" {
 
 # IAM Role
 resource "aws_iam_role" "main_role" {
-  name               = "${local.ec2_app_name}-role"
+  name               = "${local.statemanager_ec2_app_name}-role"
   assume_role_policy = data.aws_iam_policy_document.main_lambda_policy_document.json
 }
 
@@ -112,7 +121,7 @@ data "aws_iam_policy_document" "main_lambda_policy_document" {
 
 # IAM Role Policies
 resource "aws_iam_role_policy" "main_role_policy" {
-  name   = "${local.ec2_app_name}-role-policy"
+  name   = "${local.statemanager_ec2_app_name}-role-policy"
   role   = aws_iam_role.main_role.id
   policy = jsonencode({
     Version = "2012-10-17",

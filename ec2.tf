@@ -8,7 +8,7 @@ resource "aws_key_pair" "minecraft_key" {
 
 resource "aws_instance" "minecraft_server" {
   ami           = "ami-06b21ccaeff8cd686"  # Example AMI for Amazon Linux 2 (update to your preferred AMI)
-  instance_type = "t3.medium"  # This instance type is recommended for Minecraft
+  instance_type = "t3.xlarge"  # This instance type is recommended for Minecraft
 
   key_name = aws_key_pair.minecraft_key.key_name
 
@@ -22,12 +22,18 @@ resource "aws_instance" "minecraft_server" {
   # User data script to install Java and start Minecraft server
   user_data = <<-EOF
               #!/bin/bash
-              yum update -y
-              amazon-linux-extras install java-openjdk11 -y
-              mkdir /minecraft-server
-              cd /minecraft-server
-              wget https://piston-data.mojang.com/v1/objects/45810d238246d90e811d896f87b14695b7fb6839/server.jar
-              java -Xmx1024M -Xms1024M -jar server.jar nogui
+              sudo yum update -y
+              sudo yum install -y java-22-amazon-corretto-devel
+              sudo yum install -y tmux unzip
+
+              cd home/ec2-user
+              mkdir Minecraft
+              cd Minecraft/
+              curl -JLO "https://api.feed-the-beast.com/v1/modpacks/public/modpack/126/12530/server/linux"
+              chmod +x serverinstall_126_12530
+              ./serverinstall_126_12530
+              echo -e ".\yes" | ./serverinstall_126_12530
+              tmux new -d -s minecraft "echo -e 'yes' | ./start.sh"
               EOF
 }
 
@@ -49,7 +55,7 @@ resource "aws_security_group" "minecraft_sg" {
     from_port        = 22
     to_port          = 22
     protocol         = "tcp"
-    cidr_blocks      = [var.home_ip]  # Open to the world for SSH (should restrict to your IP)
+    cidr_blocks      = ["${var.home_ip}/32"]  # Restrict to your IP address
   }
 
   egress {
