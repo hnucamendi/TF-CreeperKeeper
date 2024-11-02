@@ -33,7 +33,7 @@ resource "aws_apigatewayv2_api" "creeper_keeper" {
   protocol_type = "HTTP"
   cors_configuration {
     allow_methods = ["POST", "GET", "OPTIONS"]
-    allow_origins = ["http://localhost:3000"]
+    allow_origins = ["http://localhost:5173"]
     allow_headers = ["authorization", "access-control-allow-origin", "content-type"]
   }
 }
