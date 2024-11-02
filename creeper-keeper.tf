@@ -26,6 +26,11 @@ resource "aws_lambda_function" "creeper_keeper" {
 resource "aws_apigatewayv2_api" "creeper_keeper" {
   name          = local.ck_app_name
   protocol_type = "HTTP"
+  cors_configuration {
+    allow_methods = ["POST"]
+    allow_origins = ["http://localhost:3000"]
+    allow_headers = ["authorization", "access-control-allow-origin", "content-type"]
+  }
 }
 
 resource "aws_apigatewayv2_authorizer" "creeper_keeper_authorizer" {
@@ -52,6 +57,22 @@ resource "aws_apigatewayv2_route" "creeper_keeper_start_route" {
 resource "aws_apigatewayv2_route" "creeper_keeper_stop_route" {
   api_id          = aws_apigatewayv2_api.creeper_keeper.id
   route_key       = "POST /stop"
+  target          = "integrations/${aws_apigatewayv2_integration.creeper_keeper.id}"
+  authorization_scopes = ["read:all", "write:all"]
+  authorizer_id   = aws_apigatewayv2_authorizer.creeper_keeper_authorizer.id
+  authorization_type = "JWT"
+}
+resource "aws_apigatewayv2_route" "creeper_keeper_add_instance_route" {
+  api_id          = aws_apigatewayv2_api.creeper_keeper.id
+  route_key       = "POST /addInstance"
+  target          = "integrations/${aws_apigatewayv2_integration.creeper_keeper.id}"
+  authorization_scopes = ["read:all", "write:all"]
+  authorizer_id   = aws_apigatewayv2_authorizer.creeper_keeper_authorizer.id
+  authorization_type = "JWT"
+}
+resource "aws_apigatewayv2_route" "creeper_keeper_get_instances_route" {
+  api_id          = aws_apigatewayv2_api.creeper_keeper.id
+  route_key       = "POST /getInstances"
   target          = "integrations/${aws_apigatewayv2_integration.creeper_keeper.id}"
   authorization_scopes = ["read:all", "write:all"]
   authorizer_id   = aws_apigatewayv2_authorizer.creeper_keeper_authorizer.id
@@ -161,6 +182,18 @@ resource "aws_iam_role_policy" "creeper_keeper_role_policy" {
       {
         Effect = "Allow",
         Action = [
+          "dynamodb:PutItem",
+          "dynamodb:GetItem",
+          "dynamodb:Query",
+          "dynamodb:UpdateItem",
+        ],
+        Resource = [
+          aws_dynamodb_table.instances.arn,
+        ]
+      },
+      {
+        Effect = "Allow",
+        Action = [
           "lambda:InvokeFunction"
         ],
         Resource = [
@@ -194,4 +227,21 @@ resource "aws_lambda_permission" "creeper_keeper_perms" {
 resource "aws_cloudwatch_log_group" "creeper_keeper_apigw" {
   name              = "/aws/apigateway/${aws_apigatewayv2_api.creeper_keeper.name}-access-logs"
   retention_in_days = 7
+}
+
+resource "aws_dynamodb_table" "instances" {
+  name           = "UsersTable"
+  billing_mode   = "PAY_PER_REQUEST"
+
+  hash_key        = "PK"
+  range_key       = "SK"
+
+  attribute {
+    name = "PK"
+    type = "S"
+  }
+  attribute {
+    name = "SK"
+    type = "S"
+  }
 }

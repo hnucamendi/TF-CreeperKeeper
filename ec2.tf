@@ -1,6 +1,3 @@
-# This Terraform script will create an EC2 instance to host a Minecraft server on AWS.
-# Make sure to replace the placeholder values with your own information.
-
 resource "aws_iam_role" "minecraft_instance_role" {
   name = "minecraft-instance-role"
 
@@ -18,11 +15,35 @@ resource "aws_iam_role" "minecraft_instance_role" {
   })
 }
 
+data "aws_iam_policy_document" "custom_ssm_agent_policy_document" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "ssm:SendCommand",
+    ]
+    resources = ["*"]
+  }
+}
+
 resource "aws_iam_role_policy_attachment" "ssm_policy_attachment" {
   role       = aws_iam_role.minecraft_instance_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
+resource "aws_iam_role_policy_attachment" "ec2_ssm_policy_attachment" {
+  role       = aws_iam_role.minecraft_instance_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
+}
+
+resource "aws_iam_role_policy_attachment" "cloudwatch_agent_policy_attachment" {
+  role       = aws_iam_role.minecraft_instance_role.name
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+}
+
+resource "aws_iam_role_policy_attachment" "default_ssm_policy_attachment" {
+  role       = aws_iam_role.minecraft_instance_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedEC2InstanceDefaultPolicy"
+}
 
 resource "aws_key_pair" "minecraft_key" {
   key_name   = "minecraft-server-key"  # Name for your key pair
@@ -41,6 +62,9 @@ resource "aws_instance" "minecraft_server" {
 
   # Security Group to allow access
   vpc_security_group_ids = [aws_security_group.minecraft_sg.id]
+
+  # Attach IAM Role to instance
+  iam_instance_profile = aws_iam_instance_profile.minecraft_instance_profile.name
 
   # User data script to install Java and start Minecraft server
   user_data = <<-EOF
