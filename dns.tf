@@ -72,6 +72,7 @@ resource "aws_apigatewayv2_domain_name" "statemanager_api_domain" {
   }
   depends_on = [aws_acm_certificate.cert]
 }
+
 resource "aws_route53_record" "statemanager_api_record" {
   zone_id = data.aws_route53_zone.zone.zone_id
   name    = local.statemanager_api_domain_name
@@ -86,6 +87,17 @@ resource "aws_route53_record" "statemanager_api_record" {
 resource "aws_route53_record" "creeper_app_keeper_record" {
   zone_id = data.aws_route53_zone.zone.zone_id
   name    = local.ck_app_domain_name
+  type    = "A"
+  alias {
+    name                   = aws_apigatewayv2_domain_name.creeper_keeper_api_domain.domain_name_configuration[0].target_domain_name
+    zone_id                = aws_apigatewayv2_domain_name.creeper_keeper_api_domain.domain_name_configuration[0].hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
+resource "aws_route53_record" "creeper_webb_app_keeper_record" {
+  zone_id = data.aws_route53_zone.zone.zone_id
+  name    = local.ck_web_domain_name
   type    = "A"
   alias {
     name                   = aws_apigatewayv2_domain_name.creeper_keeper_api_domain.domain_name_configuration[0].target_domain_name
