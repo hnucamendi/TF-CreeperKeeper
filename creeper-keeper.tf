@@ -227,17 +227,6 @@ data "aws_iam_policy_document" "amplify_creeper_keeper_SSR_policy_document" {
   }
 }
 
-resource "aws_iam_role" "amplify_backend_deploy_role" {
-  name               = "amplify-${local.ck_app_name}-SSR-role"
-  assume_role_policy = data.aws_iam_policy_document.amplify_creeper_keeper_SSR_policy_document.json
-}
-
-resource "aws_iam_role_policy_attachment" "amplify_creeper_keeper_SSR_role_policy" {
-  role       = aws_iam_role.amplify_backend_deploy_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmplifyBackendDeployFullAccess"
-}
-
-
 # Lambda Permissions for API Gateway
 resource "aws_lambda_permission" "creeper_keeper_perms" {
   statement_id  = "AllowAPIGatewayInvoke"
@@ -248,7 +237,6 @@ resource "aws_lambda_permission" "creeper_keeper_perms" {
 }
 
 # CloudWatch Log Group
-
 resource "aws_cloudwatch_log_group" "creeper_keeper_apigw" {
   name              = "/aws/apigateway/${aws_apigatewayv2_api.creeper_keeper.name}-access-logs"
   retention_in_days = 7
@@ -274,7 +262,7 @@ resource "aws_dynamodb_table" "instances" {
 ## Cloudfront
 
 resource "aws_s3_bucket" "ck_web_app_bucket" {
-  bucket = local.ck_web_domain_name
+  bucket = local.ck_domain_name
 }
 
 resource "aws_s3_bucket_website_configuration" "ck_web_app" {
