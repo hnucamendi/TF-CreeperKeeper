@@ -7,6 +7,14 @@ resource "aws_acm_certificate" "cert" {
     create_before_destroy = true
   }
 }
+resource "aws_acm_certificate" "cdn_cert" {
+  domain_name       = local.ck_web_cdn_domain_name
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
 
 data "aws_route53_zone" "zone" {
   name         = local.ck_domain_name
@@ -29,9 +37,30 @@ resource "aws_route53_record" "validation_record" {
   zone_id         = data.aws_route53_zone.zone.zone_id
 }
 
+resource "aws_route53_record" "cdn_validation_record" {
+  for_each = {
+    for dvo in aws_acm_certificate.cdn_cert.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+  allow_overwrite = true
+  name            = each.value.name
+  records         = [each.value.record]
+  ttl             = 60
+  type            = each.value.type
+  zone_id         = data.aws_route53_zone.zone.zone_id
+}
+
 resource "aws_acm_certificate_validation" "validation" {
   certificate_arn = aws_acm_certificate.cert.arn
   validation_record_fqdns = [for record in aws_route53_record.validation_record : record.fqdn]
+}
+
+resource "aws_acm_certificate_validation" "cdn_validation" {
+  certificate_arn = aws_acm_certificate.cdn_cert.arn
+  validation_record_fqdns = [for record in aws_route53_record.cdn_validation_record : record.fqdn]
 }
 
 resource "aws_apigatewayv2_domain_name" "statemanager_api_domain" {
@@ -64,4 +93,3 @@ resource "aws_route53_record" "creeper_app_keeper_record" {
     evaluate_target_health = false
   }
 }
-

@@ -6,6 +6,11 @@ locals {
   ck_app_domain_uri       = "app"
   ck_app_domain_name      = "${local.ck_app_domain_uri}.${local.ck_domain_name}"
 
+  ck_web_domain_uri       = "www"
+  ck_web_domain_name      = "${local.ck_web_domain_uri}.${local.ck_domain_name}"
+
+  ck_web_cdn_domain_name  = "cdn.${local.ck_domain_name}"
+
   ck_app_name     = "creeper-keeper"
   ck_jwt_audience = ["creeper-keeper-resource"]
   ck_jwt_issuer   = "https://${var.environment}-bxn245l6be2yzhil.us.auth0.com/"
@@ -27,7 +32,7 @@ resource "aws_apigatewayv2_api" "creeper_keeper" {
   name          = local.ck_app_name
   protocol_type = "HTTP"
   cors_configuration {
-    allow_methods = ["POST"]
+    allow_methods = ["POST", "GET", "OPTIONS"]
     allow_origins = ["http://localhost:3000"]
     allow_headers = ["authorization", "access-control-allow-origin", "content-type"]
   }
@@ -72,7 +77,7 @@ resource "aws_apigatewayv2_route" "creeper_keeper_add_instance_route" {
 }
 resource "aws_apigatewayv2_route" "creeper_keeper_get_instances_route" {
   api_id          = aws_apigatewayv2_api.creeper_keeper.id
-  route_key       = "POST /getInstances"
+  route_key       = "GET /getInstances"
   target          = "integrations/${aws_apigatewayv2_integration.creeper_keeper.id}"
   authorization_scopes = ["read:all", "write:all"]
   authorizer_id   = aws_apigatewayv2_authorizer.creeper_keeper_authorizer.id
@@ -183,9 +188,7 @@ resource "aws_iam_role_policy" "creeper_keeper_role_policy" {
         Effect = "Allow",
         Action = [
           "dynamodb:PutItem",
-          "dynamodb:GetItem",
-          "dynamodb:Query",
-          "dynamodb:UpdateItem",
+          "dynamodb:Scan",
         ],
         Resource = [
           aws_dynamodb_table.instances.arn,
@@ -213,6 +216,28 @@ resource "aws_iam_role_policy" "creeper_keeper_role_policy" {
   })
 }
 
+data "aws_iam_policy_document" "amplify_creeper_keeper_SSR_policy_document" {
+  statement {
+    effect = "Allow"
+    principals {
+      type = "Service"
+      identifiers = ["amplify.amazonaws.com"]
+    }
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "amplify_backend_deploy_role" {
+  name               = "amplify-${local.ck_app_name}-SSR-role"
+  assume_role_policy = data.aws_iam_policy_document.amplify_creeper_keeper_SSR_policy_document.json
+}
+
+resource "aws_iam_role_policy_attachment" "amplify_creeper_keeper_SSR_role_policy" {
+  role       = aws_iam_role.amplify_backend_deploy_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmplifyBackendDeployFullAccess"
+}
+
+
 # Lambda Permissions for API Gateway
 resource "aws_lambda_permission" "creeper_keeper_perms" {
   statement_id  = "AllowAPIGatewayInvoke"
@@ -230,7 +255,7 @@ resource "aws_cloudwatch_log_group" "creeper_keeper_apigw" {
 }
 
 resource "aws_dynamodb_table" "instances" {
-  name           = "UsersTable"
+  name           = "CreeperKeeper"
   billing_mode   = "PAY_PER_REQUEST"
 
   hash_key        = "PK"
@@ -243,5 +268,119 @@ resource "aws_dynamodb_table" "instances" {
   attribute {
     name = "SK"
     type = "S"
+  }
+}
+
+## Cloudfront
+
+resource "aws_s3_bucket" "ck_web_app_bucket" {
+  bucket = local.ck_web_domain_name
+}
+
+resource "aws_s3_bucket_website_configuration" "ck_web_app" {
+  bucket = aws_s3_bucket.ck_web_app_bucket.id
+
+  index_document {
+    suffix = "index.html"
+  }
+
+  error_document {
+    key = "error.html"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "ck_web_app_access_block" {
+  bucket = aws_s3_bucket.ck_web_app_bucket.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_ownership_controls" "ck_web_app" {
+  bucket = aws_s3_bucket.ck_web_app_bucket.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+resource "aws_s3_bucket_policy" "ck_web_app_policy" {
+  bucket = aws_s3_bucket.ck_web_app_bucket.id
+  policy = data.aws_iam_policy_document.ck_web_app_policy_document.json
+}
+
+data "aws_iam_policy_document" "ck_web_app_policy_document" {
+  statement {
+    sid       = ""
+    effect    = "Allow"
+    resources = ["${aws_s3_bucket.ck_web_app_bucket.arn}/*"]
+
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    actions = [
+      "s3:GetObject",
+    ]
+  }
+}
+
+resource "aws_cloudfront_distribution" "app" {
+  origin {
+    domain_name = "${local.ck_domain_name}.s3-website-us-east-1.amazonaws.com"
+    origin_id   = local.ck_app_name
+
+    custom_origin_config {
+      http_port = "80"
+      https_port = "443"
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["TLSv1", "TLSv1.1", "TLSv1.2"]
+    }
+  }
+  enabled             = true
+  is_ipv6_enabled     = true
+  comment             = "creeperkeeper.com cloudfront distro"
+  default_root_object = "index.html"
+
+  custom_error_response {
+    error_code         = 404
+    response_code      = 200
+    response_page_path = "/index.html"
+}
+  aliases = [local.ck_domain_name, local.ck_web_domain_name]
+
+    default_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = local.ck_app_name
+
+    forwarded_values {
+      query_string = true
+      cookies {
+        forward = "all"
+      }
+    }
+
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
+  }
+
+  price_class = "PriceClass_100"
+
+  restrictions {
+    geo_restriction {
+      locations        = []
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = false
+    acm_certificate_arn            = aws_acm_certificate_validation.validation.certificate_arn
+    ssl_support_method             = "sni-only"
   }
 }
