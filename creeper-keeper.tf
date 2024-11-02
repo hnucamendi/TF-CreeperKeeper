@@ -170,10 +170,7 @@ resource "aws_iam_role_policy" "creeper_keeper_role_policy" {
       {
         Effect = "Allow",
         Action = [
-          "ec2:DescribeInstanceStatus",
-          "ec2:StartInstances",
-          "ec2:StopInstances",
-          "ec2:TerminateInstances",
+          "ssm:SendCommand",
         ],
         Resource = [
           "*"
