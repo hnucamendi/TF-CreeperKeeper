@@ -175,3 +175,33 @@ resource "aws_cloudwatch_log_group" "apigw_main" {
   name              = "/aws/apigateway/${aws_apigatewayv2_api.ec2_state_manager.name}-access-logs"
   retention_in_days = 7
 }
+
+resource "aws_ssm_parameter" "statemanager_jwt_audience" {
+  name  = "/statemanager/jwt/audience"
+  type  = "SecureString"
+  value = "changeme"
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
+resource "aws_ssm_parameter" "statemanager_jwt_client_secret" {
+  name  = "/statemanager/jwt/client_secret"
+  type  = "SecureString"
+  value = "changeme"
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
+resource "aws_ssm_parameter" "statemanager_jwt_client_id" {
+  name  = "/statemanager/jwt/client_id"
+  type  = "SecureString"
+  value = "changeme"
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
