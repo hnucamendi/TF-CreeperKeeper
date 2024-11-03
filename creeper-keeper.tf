@@ -395,3 +395,33 @@ resource "aws_route53_record" "records" {
     evaluate_target_health = false
   }
 }
+
+resource "aws_ssm_parameter" "ck_jwt_audience" {
+  name  = "/ck/jwt/audience"
+  type  = "SecureString"
+  value = "changeme"
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
+resource "aws_ssm_parameter" "ck_jwt_client_secret" {
+  name  = "/ck/jwt/client_secret"
+  type  = "SecureString"
+  value = "changeme"
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
+resource "aws_ssm_parameter" "ck_jwt_client_id" {
+  name  = "/ck/jwt/client_id"
+  type  = "SecureString"
+  value = "changeme"
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
