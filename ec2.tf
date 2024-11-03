@@ -20,6 +20,7 @@ data "aws_iam_policy_document" "custom_ssm_agent_policy_document" {
     effect = "Allow"
     actions = [
       "ssm:SendCommand",
+      "ssm:GetParameters",
     ]
     resources = ["*"]
   }
@@ -71,7 +72,7 @@ resource "aws_instance" "minecraft_server" {
               #!/bin/bash
               sudo yum update -y
               sudo yum install -y java-22-amazon-corretto-devel
-              sudo yum install -y tmux unzip
+              sudo yum install -y tmux unzip jq
 
               sudo yum install -y amazon-ssm-agent
               sudo systemctl enable amazon-ssm-agent
@@ -85,7 +86,42 @@ resource "aws_instance" "minecraft_server" {
               ./serverinstall_126_12530
               echo -e ".\yes" | ./serverinstall_126_12530
               tmux new -d -s minecraft "echo -e 'yes' | ./start.sh"
+
+              # Set environment variable
+              export CLIENT_SECRET=$(aws ssm get-parameter --name "/ck/jwt/client_secret" --with-decryption --query "Parameter.Value" --output text)
+
+              export ACCESS_TOKEN=$(
+                curl --request POST \
+                  --url "https://dev-bxn245l6be2yzhil.us.auth0.com/oauth/token" \
+                  --header "Content-Type: application/json" \
+                  --data '{
+                    "client_id": "HugtxPdCMdi8PmvUXC6lw8lEm6u5Jaex",
+                    "client_secret": "'"$CLIENT_SECRET"'",
+                    "audience": "creeper-keeper-resource",
+                    "grant_type": "client_credentials"
+                  }' | jq -r '.access_token'
+              )
+
+              export INSTANCE_ID=$(aws ssm get-parameter --name "/minecraft/instance_id" --query "Parameter.Value" --output text)
+
+              curl --location "https://app.creeperkeeper.com/addInstance" \
+                --header "Authorization: Bearer $ACCESS_TOKEN" \
+                --header "Content-Type: application/json" \
+                --data '{
+                  "instanceID": "'"$INSTANCE_ID"'"
+                }'
               EOF
+
+  provisioner "local-exec" {
+    command = <<-EOC
+      aws ssm put-parameter --name "/minecraft/instance_id" --value "${self.id}" --type "String" --overwrite
+    EOC
+  }
+}
+
+output "instance_id" {
+  value       = aws_instance.minecraft_server.id
+  description = "The ID of the Minecraft server EC2 instance"
 }
 
 resource "aws_iam_instance_profile" "minecraft_instance_profile" {

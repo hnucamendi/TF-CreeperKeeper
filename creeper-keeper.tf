@@ -187,6 +187,15 @@ resource "aws_iam_role_policy" "creeper_keeper_role_policy" {
       {
         Effect = "Allow",
         Action = [
+          "ssm:GetParameters"
+        ],
+        Resource = [
+          "*",
+        ]
+      },
+      {
+        Effect = "Allow",
+        Action = [
           "dynamodb:PutItem",
           "dynamodb:Scan",
         ],
