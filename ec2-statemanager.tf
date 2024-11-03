@@ -151,6 +151,7 @@ resource "aws_iam_role_policy" "main_role_policy" {
           "ec2:StartInstances",
           "ec2:StopInstances",
           "ec2:TerminateInstances",
+          "ec2:DescribeInstances",
         ],
         Resource = [
           "*"
