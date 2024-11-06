@@ -151,6 +151,148 @@ resource "aws_apigatewayv2_integration" "creeper_keeper" {
   depends_on                = [aws_lambda_function.creeper_keeper]
 }
 
+# ################
+# # WEBSOCKET API
+# ################
+# resource "aws_apigatewayv2_api" "creeper_keeper_websocket" {
+#   name                       = "creeper-keeper-websocket"
+#   protocol_type              = "WEBSOCKET"
+#   route_selection_expression = "$request.body.action"
+# }
+
+# resource "aws_apigatewayv2_route" "connect_route" {
+#   api_id    = aws_apigatewayv2_api.creeper_keeper_websocket.id
+#   route_key = "$connect"
+#   authorization_type = "NONE"
+#   target = "integrations/${aws_apigatewayv2_integration.connect_integration.id}"
+# }
+
+# resource "aws_apigatewayv2_route" "disconnect_route" {
+#   api_id    = aws_apigatewayv2_api.creeper_keeper_websocket.id
+#   route_key = "$disconnect"
+#   authorization_type = "NONE"
+#   target = "integrations/${aws_apigatewayv2_integration.disconnect_integration.id}"
+# }
+
+# resource "aws_apigatewayv2_route" "default_route" {
+#   api_id    = aws_apigatewayv2_api.creeper_keeper_websocket.id
+#   route_key = "$default"
+#   authorization_type = "NONE"
+#   target = "integrations/${aws_apigatewayv2_integration.default_integration.id}"
+# }
+
+# resource "aws_apigatewayv2_integration" "connect_integration" {
+#   api_id             = aws_apigatewayv2_api.creeper_keeper_websocket.id
+#   integration_type   = "AWS_PROXY"
+#   integration_uri    = aws_lambda_function.creeper_keeper_connect_function.invoke_arn
+#   integration_method = "POST"
+# }
+
+# resource "aws_apigatewayv2_integration" "disconnect_integration" {
+#   api_id             = aws_apigatewayv2_api.creeper_keeper_websocket.id
+#   integration_type   = "AWS_PROXY"
+#   integration_uri    = aws_lambda_function.creeper_keeper_disconnect_function.invoke_arn
+#   integration_method = "POST"
+# }
+
+# resource "aws_apigatewayv2_integration" "default_integration" {
+#   api_id             = aws_apigatewayv2_api.creeper_keeper_websocket.id
+#   integration_type   = "AWS_PROXY"
+#   integration_uri    = aws_lambda_function.creeper_keeper_default_function.invoke_arn
+#   integration_method = "POST"
+# }
+
+# resource "aws_apigatewayv2_deployment" "websocket_deployment" {
+#   api_id = aws_apigatewayv2_api.creeper_keeper_websocket.id
+# }
+
+# resource "aws_apigatewayv2_stage" "websocket_stage" {
+#   api_id      = aws_apigatewayv2_api.creeper_keeper_websocket.id
+#   name        = "prod"
+#   deployment_id = aws_apigatewayv2_deployment.websocket_deployment.id
+# }
+
+# resource "aws_lambda_function" "creeper_keeper_connect_function" {
+#   function_name = local.ck_app_name
+#   role          = aws_iam_role.creeper_keeper_role.arn
+#   architectures = ["x86_64"]
+#   filename      = "./bootstrap.zip"
+#   handler       = "bootstrap"
+#   runtime       = "provided.al2023"
+# }
+# resource "aws_lambda_function" "creeper_keeper_disconnect_function" {
+#   function_name = local.ck_app_name
+#   role          = aws_iam_role.creeper_keeper_role.arn
+#   architectures = ["x86_64"]
+#   filename      = "./bootstrap.zip"
+#   handler       = "bootstrap"
+#   runtime       = "provided.al2023"
+# }
+
+# resource "aws_lambda_function" "creeper_keeper_default_function" {
+#   function_name = local.ck_app_name
+#   role          = aws_iam_role.creeper_keeper_role.arn
+#   architectures = ["x86_64"]
+#   filename      = "./bootstrap.zip"
+#   handler       = "bootstrap"
+#   runtime       = "provided.al2023"
+# }
+
+# resource "aws_iam_role" "lambda_execution_role" {
+#   name = "lambda_execution_role"
+
+#   assume_role_policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [
+#       {
+#         Effect = "Allow",
+#         Principal = {
+#           Service = "lambda.amazonaws.com"
+#         },
+#         Action = "sts:AssumeRole"
+#       }
+#     ]
+#   })
+# }
+
+# resource "aws_iam_policy" "lambda_execution_policy" {
+#   name = "lambda_execution_policy"
+
+#   policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [
+#       {
+#         Effect = "Allow",
+#         Action = [
+#           "logs:CreateLogGroup",
+#           "logs:CreateLogStream",
+#           "logs:PutLogEvents"
+#         ],
+#         Resource = "arn:aws:logs:*:*:*"
+#       },
+#       {
+#         Effect = "Allow",
+#         Action = [
+#           "execute-api:ManageConnections"
+#         ],
+#         Resource = "arn:aws:execute-api:*:*:*/@connections/*"
+#       },
+#       {
+#         Effect = "Allow",
+#         Action = [
+#           "ec2:DescribeInstances"
+#         ],
+#         Resource = "*"
+#       }
+#     ]
+#   })
+# }
+
+# resource "aws_iam_role_policy_attachment" "lambda_execution_policy_attachment" {
+#   role       = aws_iam_role.lambda_execution_role.name
+#   policy_arn = aws_iam_policy.lambda_execution_policy.arn
+# }
+
 # IAM Role
 resource "aws_iam_role" "creeper_keeper_role" {
   name               = "${local.ck_app_name}-role"
