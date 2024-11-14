@@ -151,6 +151,46 @@ resource "aws_apigatewayv2_integration" "creeper_keeper" {
   depends_on                = [aws_lambda_function.creeper_keeper]
 }
 
+# ################
+# # WEBSOCKET API
+# ################
+# Websocket Lambda Proxies
+resource "aws_lambda_function" "ck_authorizer" {
+  function_name = "${local.ck_app_name}-authorizer"
+  role          = aws_iam_role.creeper_keeper_role.arn
+  architectures = ["x86_64"]
+  filename      = "./bootstrap.zip"
+  handler       = "bootstrap"
+  runtime       = "provided.al2023"
+}
+
+resource "aws_lambda_function" "ck_connect" {
+  function_name = "${local.ck_app_name}-connect"
+  role          = aws_iam_role.creeper_keeper_role.arn
+  architectures = ["x86_64"]
+  filename      = "./bootstrap.zip"
+  handler       = "bootstrap"
+  runtime       = "provided.al2023"
+}
+
+resource "aws_lambda_function" "ck_disconnect" {
+  function_name = "${local.ck_app_name}-disconnect"
+  role          = aws_iam_role.creeper_keeper_role.arn
+  architectures = ["x86_64"]
+  filename      = "./bootstrap.zip"
+  handler       = "bootstrap"
+  runtime       = "provided.al2023"
+}
+
+resource "aws_lambda_function" "ck_sendLog" {
+  function_name = "${local.ck_app_name}-sendLog"
+  role          = aws_iam_role.creeper_keeper_role.arn
+  architectures = ["x86_64"]
+  filename      = "./bootstrap.zip"
+  handler       = "bootstrap"
+  runtime       = "provided.al2023"
+}
+
 # IAM Role
 resource "aws_iam_role" "creeper_keeper_role" {
   name               = "${local.ck_app_name}-role"
@@ -443,6 +483,16 @@ resource "aws_ssm_parameter" "ck_jwt_client_secret" {
 
 resource "aws_ssm_parameter" "ck_jwt_client_id" {
   name  = "/ck/jwt/client_id"
+  type  = "SecureString"
+  value = "changeme"
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
+resource "aws_ssm_parameter" "ck_ws_apiid" {
+  name  = "/ck/ws/APIID"
   type  = "SecureString"
   value = "changeme"
 

@@ -156,6 +156,15 @@ resource "aws_iam_role_policy" "main_role_policy" {
         Resource = [
           "*"
         ]
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "dynamodb:DeleteItem",
+        ],
+        Resource = [
+          "*"
+        ]
       }
     ]
   })
