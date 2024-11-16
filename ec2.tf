@@ -109,22 +109,6 @@ resource "aws_instance" "minecraft_server" {
                 --data '{
                   "instanceID": "'"$INSTANCE_ID"'"
                 }'
-
-              # Download binary script from S3 and place in GO_BINARY_PATH
-              mkdir -p /home/ec2-user/utils
-              aws s3 cp "s3://creeper-keeper-scripts/ctw" /home/ec2-user/utils/ctw
-              chmod +x /home/ec2-user/utils/ctw
-
-              # Bash script to monitor the Minecraft server log file and send updates to the WebSocket
-              export APIID=$(aws ssm get-parameter --name "/ck/ws/APIID" --with-decryption --query "Parameter.Value" --output text)
-              export LOG_FILE_PATH="/home/ec2-user/Minecraft/logs/latest.log"
-              export GO_BINARY_PATH="/home/ec2-user/utils/ctw"
-
-              # Run the log monitoring script in a separate tmux session
-              tmux new -d -s log_monitor "tail -Fn0 \"$LOG_FILE_PATH\" | while read -r line; do
-                if [[ -n \"\$line\" ]]; then
-                  \$GO_BINARY_PATH \"\$line\"
-                fi
               done"
             EOF
 
